@@ -28,9 +28,6 @@ Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 Adafruit_AW9523 ledDriver;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
-uint32_t loopCounter = 0; //max value 2,147,483,647
-#define LOOP_MAX 1000000 //1,000,000,000
-
 void setup() {
 
   Serial.begin();
@@ -94,25 +91,19 @@ void loop() {
   //   ledDriver.analogWrite(pins[i], brightness);
   // }
 
-  //GAMMA is what is causing the flat spot on the bottom
-  //and the phase needs a much larger shift
-  //Should use millis()/1000 * pi (period of 1s) and add like 500 to it for bottom
-  float phase = (loopCounter / 5000.0) * M_PI;
-  int brightness = int(pow((sin(phase) + 1.0) * 0.5, GAMMA) * MAX_BRIGHTNESS + 0.5);
+
+  float phase = (millis() / 1000.0) * M_PI;
+  int brightness = int(pow((sin(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
   Serial.print("BrightnessTop:"); Serial.print(brightness); Serial.print(","); Serial.print("Max:"); Serial.print(MAX_BRIGHTNESS); Serial.print(",");
   Serial.print("PhaseTop:"); Serial.print(phase); Serial.print(",");
   ledDriver.analogWrite(SIGN_TOP, brightness);
 
-  phase = ((loopCounter / 5000.0) + 20.0) * M_PI;
-  brightness = int(pow((sin(phase) + 1.0) * 0.5, GAMMA) * MAX_BRIGHTNESS + 0.5);
+  phase = ((millis() - 200) / 1000.0) * M_PI;
+  brightness = int(pow((sin(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
   Serial.print("PhaseBottom:"); Serial.print(phase); Serial.print(",");
   Serial.print("BrightnessBottom:"), Serial.println(brightness);
   ledDriver.analogWrite(SIGN_BOTTOM, brightness);
   
-  
 
-
-
-  loopCounter = (loopCounter + 1) % LOOP_MAX;
 }
 
