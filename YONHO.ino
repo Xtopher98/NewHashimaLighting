@@ -94,6 +94,9 @@ void loop() {
   //   ledDriver.analogWrite(pins[i], brightness);
   // }
 
+  //GAMMA is what is causing the flat spot on the bottom
+  //and the phase needs a much larger shift
+  //Should use millis()/1000 * pi (period of 1s) and add like 500 to it for bottom
   float phase = (loopCounter / 5000.0) * M_PI;
   int brightness = int(pow((sin(phase) + 1.0) * 0.5, GAMMA) * MAX_BRIGHTNESS + 0.5);
   Serial.print("BrightnessTop:"); Serial.print(brightness); Serial.print(","); Serial.print("Max:"); Serial.print(MAX_BRIGHTNESS); Serial.print(",");
