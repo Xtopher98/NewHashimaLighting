@@ -32,8 +32,8 @@ Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 Control signTop(SIGN_TOP);
 Control signBottom(SIGN_BOTTOM);
 
-Control dotRight(DOT_RIGHT, true);
-Control dotLeft(DOT_LEFT, true);
+Control dotRight(DOT_RIGHT);
+Control dotLeft(DOT_LEFT);
 
 
 void setup() {
@@ -73,11 +73,11 @@ void setup() {
     ledDriver.analogWrite(sign[i], MAX_BRIGHTNESS); //sign off
   }
   
-  dotLeft.breathe(1, 1300);
-  dotRight.breathe(1, 1300);
+  dotLeft.breathe(500, true);
+  dotRight.breathe(500, true);
  
 
-  matrix.setBrightness(2); //brightness between 0 and 15
+  matrix.setBrightness(1); //brightness between 0 and 15
   matrix.setRotation(1);
   matrix.clear();
   matrix.drawBitmap(0,0, smile_bmp, 8,8, LED_ON);
@@ -90,9 +90,13 @@ void setup() {
 void loop() {
 
   if(millis() % 10000 == 0) 
-    signTop.breathe(1, 1000.0);
+    signTop.breathe(1000);
   if(millis() % 10000 == 300)
-    signBottom.breathe(1, 1000);
+    signBottom.breathe(1000);
+
+  if(millis() % 10000 == 2000) {
+    dotLeft.blink(200, 100, 5);
+  }
 
   signTop.update();
   signBottom.update();

@@ -12,12 +12,14 @@
 
 #define MIN_BRIGHTNESS 0
 #define MAX_BRIGHTNESS 255
+#define LOW  0 //MIN_BRIGHTNESS
+#define HIGH 255 //MAX_BRIGHTNESS
 
 uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT };
 uint8_t sign[] = { SIGN_TOP, SIGN_BOTTOM };
 #define NUM_LEDS (sizeof(leds) / sizeof(leds[0]))
 
-#define GAMMA 2.6 //for perceptually-linear brightness
+#define GAMMA 1.5 //for perceptually-linear brightness
 //bitmaps for 8x8 Matrix
 static const uint8_t PROGMEM
   smile_bmp[] =
