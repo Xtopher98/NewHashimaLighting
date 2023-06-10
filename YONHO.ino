@@ -73,8 +73,8 @@ void setup() {
     ledDriver.analogWrite(sign[i], MAX_BRIGHTNESS); //sign off
   }
   
-  dotLeft.breathe(1, 2000);
-  dotRight.breathe(1, 2000);
+  dotLeft.breathe(1, 1300);
+  dotRight.breathe(1, 1300);
  
 
   matrix.setBrightness(2); //brightness between 0 and 15
