@@ -1,34 +1,35 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
-
+enum pattern { NONE, FLICKER, BREATHE, BLINK };
 
 class Control {
 
     int pin;
     int curBrightness;
-    unsigned long prevMillis;
+    unsigned long lastUpdate;
+    int interval;
 
-    bool controlActive;
+    pattern activePattern;
 
 
 public:
     Control(int pin) : pin(pin) {
         curBrightness = 0;
-        controlActive = false;
+        lastUpdate = 0;
+        activePattern = NONE;
     }
 
-    void flicker() {
+    void update();
 
-    }
+    void flicker();
+    void flickerUpdate();
 
-    void breath() {
+    void breathe();
+    void breatheUpdate();
 
-    }
-
-    void blink() {
-        
-    }
-}
+    void blink();
+    void blinkUpdate();
+};
 
 #endif

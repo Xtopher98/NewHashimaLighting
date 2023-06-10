@@ -69,8 +69,6 @@ void setup() {
   for (uint8_t i = 0; i < NUM_LEDS; i++) {
     ledDriver.analogWrite(leds[i], MAX_BRIGHTNESS);
   }
-  ledDriver.analogWrite(SIGN_TOP, MAX_BRIGHTNESS);
-  ledDriver.analogWrite(SIGN_BOTTOM, MAX_BRIGHTNESS);
 
   matrix.setBrightness(5); //brightness between 0 and 15
   matrix.setRotation(1);
@@ -83,27 +81,14 @@ void setup() {
 }
 
 void loop() {
-  // for (uint8_t i=0; i<NUM_PINS; i++) { //For each pin...
-  //   //Calc sine wave, phase offset for each pin, with gamma correction.
-  //   //If using red, green, blue nOOds, you'll get a cycle of hues.
-    // float phase = (millis() / 1000.0 - 2.0 * i / (float)NUM_PINS) * M_PI;
-  //   int brightness = int(pow((sin(phase) + 1.0) * 0.5, GAMMA) * 255 + 0.5);
-  //   ledDriver.analogWrite(pins[i], brightness);
-  // }
 
-
-  float phase = (millis() / 1000.0) * M_PI;
-  int brightness = int(pow((sin(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
-  Serial.print("BrightnessTop:"); Serial.print(brightness); Serial.print(","); Serial.print("Max:"); Serial.print(MAX_BRIGHTNESS); Serial.print(",");
-  Serial.print("PhaseTop:"); Serial.print(phase); Serial.print(",");
+  float phase = (millis() / 2000.0) * M_PI;
+  int brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
   ledDriver.analogWrite(SIGN_TOP, brightness);
 
-  phase = ((millis() - 200) / 1000.0) * M_PI;
-  brightness = int(pow((sin(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
-  Serial.print("PhaseBottom:"); Serial.print(phase); Serial.print(",");
-  Serial.print("BrightnessBottom:"), Serial.println(brightness);
+  phase = ((millis() - 300) / 2000.0) * M_PI;
+  brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
   ledDriver.analogWrite(SIGN_BOTTOM, brightness);
   
-
 }
 
