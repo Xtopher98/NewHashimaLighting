@@ -1,32 +1,40 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_AW9523.h>
+// #include <Adafruit_AW9523.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_LEDBackpack.h>
 #include <Adafruit_NeoPixel.h>
-#include "constants.h"
+// #include "constants.h"
+#include "control.h"
 
-#define SIGN_TOP 1
-#define SIGN_BOTTOM 2
-#define DOT_RIGHT 6
-#define DOT_LEFT 7
-#define ARCH_RIGHT 12
-#define ARCH_LEFT 13
-#define CORNER_RIGHT 14
-#define CORNER_LEFT 15
+// #define SIGN_TOP 1
+// #define SIGN_BOTTOM 2
+// #define DOT_RIGHT 6
+// #define DOT_LEFT 7
+// #define ARCH_RIGHT 12
+// #define ARCH_LEFT 13
+// #define CORNER_RIGHT 14
+// #define CORNER_LEFT 15
 
-#define MIN_BRIGHTNESS 0
-#define MAX_BRIGHTNESS 255
+// #define MIN_BRIGHTNESS 0
+// #define MAX_BRIGHTNESS 255
 
-uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT };
-uint8_t sign[] = { SIGN_TOP, SIGN_BOTTOM };
-#define NUM_LEDS (sizeof(leds) / sizeof(leds[0]))
+// uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT };
+// uint8_t sign[] = { SIGN_TOP, SIGN_BOTTOM };
+// #define NUM_LEDS (sizeof(leds) / sizeof(leds[0]))
 
-#define GAMMA 2.6 //for perceptually-linear brightness
+// #define GAMMA 2.6 //for perceptually-linear brightness
 
 Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
-Adafruit_AW9523 ledDriver;
+// Adafruit_AW9523 ledDriver;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+
+Control signTop(SIGN_TOP);
+Control signBottom(SIGN_BOTTOM);
+
+Control dotRight(DOT_RIGHT, true);
+Control dotLeft(DOT_LEFT, true);
+
 
 void setup() {
 
@@ -58,19 +66,18 @@ void setup() {
 
   for (uint8_t i=0; i<NUM_LEDS; i++) {
     ledDriver.pinMode(leds[i], AW9523_LED_MODE); //set constant current drive mode
-    ledDriver.analogWrite(leds[i], 0); //leds off
+    ledDriver.analogWrite(leds[i], MAX_BRIGHTNESS); //leds off
   }
   for (uint8_t i=0; i<2; i++) {
     ledDriver.pinMode(sign[i], AW9523_LED_MODE); //set constant current drive mode
-    ledDriver.analogWrite(sign[i], 0); //sign off
+    ledDriver.analogWrite(sign[i], MAX_BRIGHTNESS); //sign off
   }
   
-  //turn on all the leds
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    ledDriver.analogWrite(leds[i], MAX_BRIGHTNESS);
-  }
+  dotLeft.breathe(1, 2000);
+  dotRight.breathe(1, 2000);
+ 
 
-  matrix.setBrightness(5); //brightness between 0 and 15
+  matrix.setBrightness(2); //brightness between 0 and 15
   matrix.setRotation(1);
   matrix.clear();
   matrix.drawBitmap(0,0, smile_bmp, 8,8, LED_ON);
@@ -82,13 +89,24 @@ void setup() {
 
 void loop() {
 
-  float phase = (millis() / 2000.0) * M_PI;
-  int brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
-  ledDriver.analogWrite(SIGN_TOP, brightness);
+  if(millis() % 10000 == 0) 
+    signTop.breathe(1, 1000.0);
+  if(millis() % 10000 == 300)
+    signBottom.breathe(1, 1000);
 
-  phase = ((millis() - 300) / 2000.0) * M_PI;
-  brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
-  ledDriver.analogWrite(SIGN_BOTTOM, brightness);
+  signTop.update();
+  signBottom.update();
+  dotLeft.update();
+  dotRight.update();
+
+
+  // float phase = (millis() / 2000.0) * M_PI;
+  // int brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
+  // ledDriver.analogWrite(SIGN_TOP, brightness);
+
+  // phase = ((millis() - 300) / 2000.0) * M_PI;
+  // brightness = int(pow((cos(phase) + 1.0) * 0.5, 1) * MAX_BRIGHTNESS + 0.5);
+  // ledDriver.analogWrite(SIGN_BOTTOM, brightness);
   
 }
 

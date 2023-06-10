@@ -1,4 +1,23 @@
+#ifndef CONSTANTS
+#define CONSTANTS
 
+#define SIGN_TOP 1
+#define SIGN_BOTTOM 2
+#define DOT_RIGHT 6
+#define DOT_LEFT 7
+#define ARCH_RIGHT 12
+#define ARCH_LEFT 13
+#define CORNER_RIGHT 14
+#define CORNER_LEFT 15
+
+#define MIN_BRIGHTNESS 0
+#define MAX_BRIGHTNESS 255
+
+uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT };
+uint8_t sign[] = { SIGN_TOP, SIGN_BOTTOM };
+#define NUM_LEDS (sizeof(leds) / sizeof(leds[0]))
+
+#define GAMMA 2.6 //for perceptually-linear brightness
 //bitmaps for 8x8 Matrix
 static const uint8_t PROGMEM
   smile_bmp[] =
@@ -28,3 +47,5 @@ static const uint8_t PROGMEM
     0b10100101,
     0b01000010,
     0b00111100 };
+
+#endif
