@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 // #include <Adafruit_AW9523.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_LEDBackpack.h>
+// #include <Adafruit_GFX.h>
+// #include <Adafruit_LEDBackpack.h>
 #include <Adafruit_NeoPixel.h>
 // #include "constants.h"
 #include "control.h"
@@ -27,13 +27,15 @@
 
 Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 // Adafruit_AW9523 ledDriver;
-Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+// Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
 Control signTop(SIGN_TOP);
 Control signBottom(SIGN_BOTTOM);
 
 Control dotRight(DOT_RIGHT);
 Control dotLeft(DOT_LEFT);
+
+Control mat(-1);
 
 
 void setup() {
@@ -73,15 +75,15 @@ void setup() {
     ledDriver.analogWrite(sign[i], MAX_BRIGHTNESS); //sign off
   }
   
-  dotLeft.breathe(500, true);
-  dotRight.breathe(500, true);
+  dotLeft.breathe(1000, true);
+  dotRight.breathe(1000, true);
  
 
-  matrix.setBrightness(1); //brightness between 0 and 15
+  matrix.setBrightness(5); //brightness between 0 and 15
   matrix.setRotation(1);
   matrix.clear();
   matrix.drawBitmap(0,0, smile_bmp, 8,8, LED_ON);
-  matrix.writeDisplay(); //display on matrix
+  matrix.writeDisplay();
 
   pixels.fill(0x00FF00); //status LED to green once setup is complete
   pixels.show();
@@ -89,19 +91,22 @@ void setup() {
 
 void loop() {
 
-  if(millis() % 10000 == 0) 
+  if(millis() % 5000 == 0) 
     signTop.breathe(1000);
-  if(millis() % 10000 == 300)
+  if(millis() % 5000 == 300)
     signBottom.breathe(1000);
 
   if(millis() % 10000 == 2000) {
-    dotLeft.blink(200, 100, 5);
+    dotLeft.blink(200, 100, 21);
+    dotRight.blink(200, 100, 21);
+    mat.print("Scanning in progress", 50);
   }
 
   signTop.update();
   signBottom.update();
   dotLeft.update();
   dotRight.update();
+  mat.update();
 
 
   // float phase = (millis() / 2000.0) * M_PI;
