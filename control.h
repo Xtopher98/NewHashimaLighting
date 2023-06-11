@@ -1,7 +1,9 @@
-#include <cstring>
+#include "common/tusb_common.h"
+#include <cstdlib>
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include <cstring>
 #include <sys/_intsup.h>
 #include <sys/_types.h>
 #include "SerialUSB.h"
@@ -22,7 +24,8 @@ enum pattern { NONE, FLICKER, BREATHE, BLINK, PRINT };
 class Control {
 
   int pin;
-  int brightness;
+  uint8_t brightness = 255;
+  uint8_t prevBrightness;
   uint32_t prevMillis;
   uint32_t curMillis;
 
@@ -40,6 +43,10 @@ class Control {
   int16_t totalSteps;
   int16_t index;
 
+  uint16_t flickerCooldown = 0;
+
+  const uint8_t* bitmap;
+
   const char* text;
 
   void (*onComplete)();
@@ -56,7 +63,10 @@ class Control {
       prevMillis = curMillis;
       switch(activePattern) {
         case FLICKER:
-          flickerUpdate();
+          if(flickerCooldown > 0)
+            flickerCooldown--;
+          else
+            flickerUpdate();
           break;
         case BREATHE:
           breatheUpdate();
@@ -73,11 +83,24 @@ class Control {
     }
   }
 
-  void flicker() {
-
+  void flicker(int duration, int _interval, int cooldown) {
+    //don't start if a pattern is active
+    if(activePattern != NONE) {
+      return;
+    }
+    activePattern = FLICKER;
+    randomSeed(millis());
+    interval = _interval;
+    totalSteps = duration / interval;
+    prevBrightness = brightness;
+    index = 0;
+    flickerCooldown = cooldown;
   }
 
   void breathe(int _period, bool _repeat = false) {
+    // if(activePattern != NONE) {
+    //   return;
+    // }
     activePattern = BREATHE;
 
     interval = 1; 
@@ -102,9 +125,11 @@ class Control {
     repeat = _repeat;
   }
 
-  void print(const char* _text, uint16_t updateInterval) {
+  void print(const char* _text, uint16_t updateInterval, const uint8_t endBitmap[]) {
     activePattern = PRINT;
     text = _text;
+
+    bitmap = endBitmap;
     
     interval = updateInterval;
     totalSteps = (strlen(text) * -6) - 1;
@@ -121,8 +146,14 @@ class Control {
   void increment() {
     if((activePattern != PRINT) && (++index >= totalSteps)) {
       index = 0;
-      if(!repeat)
+      if(!repeat) {
+        if(activePattern == FLICKER) {
+          brightness = prevBrightness;
+          ledDriver.analogWrite(pin, brightness);
+
+        }
         activePattern = NONE;
+      }
 
       if(onComplete != NULL) {
         onComplete(); 
@@ -132,13 +163,15 @@ class Control {
       index = 0;
       activePattern = NONE;
       matrix.clear();
-      matrix.drawBitmap(0,0, smile_bmp, 8,8, LED_ON);
+      matrix.drawBitmap(0,0, bitmap, 8,8, LED_ON);
       matrix.writeDisplay();
     }
   }
 
   void flickerUpdate() {
-
+    brightness = random(255);
+    ledDriver.analogWrite(pin, brightness);
+    increment();
   }
   
   void breatheUpdate() {

@@ -32,8 +32,11 @@ Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 Control signTop(SIGN_TOP);
 Control signBottom(SIGN_BOTTOM);
 
-Control dotRight(DOT_RIGHT);
 Control dotLeft(DOT_LEFT);
+Control dotRight(DOT_RIGHT);
+
+Control archLeft(ARCH_LEFT);
+Control archRight(ARCH_RIGHT);
 
 Control mat(-1);
 
@@ -87,25 +90,41 @@ void setup() {
 
   pixels.fill(0x00FF00); //status LED to green once setup is complete
   pixels.show();
+  randomSeed(analogRead(0));
 }
 
 void loop() {
 
-  if(millis() % 5000 == 0) 
+  if(millis() % 5000 == 0) {
     signTop.breathe(1000);
-  if(millis() % 5000 == 300)
+  }
+  if(millis() % 5000 == 300) // offset breathe by 0.3s from top of sign
     signBottom.breathe(1000);
 
-  if(millis() % 10000 == 2000) {
-    dotLeft.blink(200, 100, 21);
-    dotRight.blink(200, 100, 21);
-    mat.print("Scanning in progress", 50);
+  if(millis() % 20000 == 10000) {
+    dotLeft.blink(200, 100, 22);
+    dotRight.blink(200, 100, 22);
+    mat.print("Scanning in progress", 50, left_bmp);
   }
+
+  if(millis() % random(1000000) == 0) {
+    archLeft.flicker(500, 10, 2000);
+  }
+  if(millis() % random(1000000) == 0) {
+    archRight.flicker(500, 10, 2000);
+  }
+  if(millis() % random(1000000/2) == 0) {
+    signTop.flicker(500, 10, 100);
+    signBottom.flicker(500, 10, 100);
+  }
+
 
   signTop.update();
   signBottom.update();
   dotLeft.update();
   dotRight.update();
+  archLeft.update();
+  archRight.update();
   mat.update();
 
 
