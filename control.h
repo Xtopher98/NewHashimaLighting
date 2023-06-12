@@ -1,8 +1,8 @@
-#include "common/tusb_common.h"
-#include <cstdlib>
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include "common/tusb_common.h"
+#include <cstdlib>
 #include <cstring>
 #include <sys/_intsup.h>
 #include <sys/_types.h>
@@ -21,17 +21,19 @@ Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
 enum pattern { NONE, FLICKER, BREATHE, BLINK, PRINT };
 
+//Control class enables ability to run multiple patterns on leds simultaneously
+//without using sleep statements.
 class Control {
 
   int pin;
-  uint8_t brightness = 255;
+  uint8_t brightness = MAX_BRIGHTNESS; // all leds are initially on
   uint8_t prevBrightness;
   uint32_t prevMillis;
   uint32_t curMillis;
 
   pattern activePattern;
 
-  int interval;
+  uint32_t interval;
   float phase;
   float period;
   bool repeat;
@@ -57,6 +59,7 @@ class Control {
       activePattern = NONE;
   }
 
+  //Call once per main loop to check if the pattern needs to be updated
   void update() {
     curMillis = millis();
     if(curMillis - prevMillis > interval) {
@@ -83,13 +86,16 @@ class Control {
     }
   }
 
-  void flicker(int duration, int _interval, int cooldown) {
+  //starts a period of time (duration) where the brightness is randomly changed every (_interval).
+  //(cooldown) defines an optional minimum time between pattern triggering to be used if the pattern
+  //is being triggered randomly 
+  void flicker(int duration, int _interval, int cooldown = 0) {
     //don't start if a pattern is active
     if(activePattern != NONE) {
       return;
     }
     activePattern = FLICKER;
-    randomSeed(millis());
+    randomSeed(millis()); // new random seed each time
     interval = _interval;
     totalSteps = duration / interval;
     prevBrightness = brightness;
@@ -97,10 +103,10 @@ class Control {
     flickerCooldown = cooldown;
   }
 
+  //starts a single period of a cosign wave (bright -> off -> bright) that takes (_period)ms 
+  //to complete
+  //(_repeat) is used to restart the pattern at the end. Defaults to false
   void breathe(int _period, bool _repeat = false) {
-    // if(activePattern != NONE) {
-    //   return;
-    // }
     activePattern = BREATHE;
 
     interval = 1; 
@@ -111,7 +117,10 @@ class Control {
     repeat = _repeat;
   }
 
-  void blink(uint16_t _onTime, uint16_t _offTime, uint8_t _numBlinks, bool _repeat = false, void (*callback)() = NULL) {
+  //starts a pattern of blinking with an on time of (_onTime) and an off time of (_offTime) that
+  //repeats (_numBlinks) times. 
+  //(_repeat) is used to restart the pattern at the end. Defaults to false
+  void blink(uint16_t _onTime, uint16_t _offTime, uint8_t _numBlinks, bool _repeat = false) {
     activePattern = BLINK;
 
     onTime = _onTime;
@@ -119,12 +128,14 @@ class Control {
     numBlinks = _numBlinks;
     prevMillis = 0;
     brightness = HIGH;
-    onComplete = callback;
 
     interval = onTime;
     repeat = _repeat;
   }
 
+  //used with an 8x8 led matrix to scroll the given (_text) across the matrix. Scroll speed is
+  //defined by (updateInterval)
+  //(endBitmap) defines the image to be shown once the scrolling is complete
   void print(const char* _text, uint16_t updateInterval, const uint8_t endBitmap[]) {
     activePattern = PRINT;
     text = _text;
@@ -143,6 +154,8 @@ class Control {
 
   private:
 
+  //internal use at the end of a single step of a pattern to increment it to the next step 
+  //or end the pattern
   void increment() {
     if((activePattern != PRINT) && (++index >= totalSteps)) {
       index = 0;
@@ -159,6 +172,7 @@ class Control {
         onComplete(); 
       }
     }
+    //print needs to decrement to scroll text the correct direction.
     else if((activePattern == PRINT) && (--index < totalSteps)) {
       index = 0;
       activePattern = NONE;
@@ -168,12 +182,14 @@ class Control {
     }
   }
 
+  //gets new random value and updates led's brightness
   void flickerUpdate() {
     brightness = random(255);
     ledDriver.analogWrite(pin, brightness);
     increment();
   }
   
+  //calculates the next step of the cosign wave to updates led's brightness
   void breatheUpdate() {
     phase = (index / period) * M_PI;
     brightness = int(pow((cos(phase) + 1.0) * 0.5, GAMMA) * MAX_BRIGHTNESS + 0.5 );
@@ -182,6 +198,7 @@ class Control {
     increment();
   }
 
+  //turns led on or off
   void blinkUpdate() {
     if((brightness != LOW)) {
       prevMillis = curMillis;
@@ -209,6 +226,7 @@ class Control {
     }
   }
 
+  //shifts the text by the correct amount and prints to matrix
   void printUpdate() {
       matrix.clear();
       matrix.setCursor(index, 0);

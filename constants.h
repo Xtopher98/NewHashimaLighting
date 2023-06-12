@@ -1,6 +1,7 @@
 #ifndef CONSTANTS
 #define CONSTANTS
 
+//pinout of led driver board
 #define SIGN_TOP 1
 #define SIGN_BOTTOM 2
 #define DOT_RIGHT 6
@@ -49,6 +50,8 @@ static const uint8_t PROGMEM
     0b10100101,
     0b01000010,
     0b00111100 },
+  
+  //arrow pointing left
   left_bmp[]
   { 0b00010000,
     0b00110000,
