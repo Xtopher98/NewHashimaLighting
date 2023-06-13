@@ -13,11 +13,10 @@
 
 #define MIN_BRIGHTNESS 0
 #define MAX_BRIGHTNESS 255
-#define LOW  0 //MIN_BRIGHTNESS
-#define HIGH 255 //MAX_BRIGHTNESS
+#define LOW  MIN_BRIGHTNESS
+#define HIGH MAX_BRIGHTNESS
 
-uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT };
-uint8_t sign[] = { SIGN_TOP, SIGN_BOTTOM };
+uint8_t leds[] = { DOT_RIGHT, DOT_LEFT, ARCH_RIGHT, ARCH_LEFT, CORNER_RIGHT, CORNER_LEFT, SIGN_TOP, SIGN_BOTTOM };
 #define NUM_LEDS (sizeof(leds) / sizeof(leds[0]))
 
 #define GAMMA 1.5 //for perceptually-linear brightness

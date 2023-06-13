@@ -1,14 +1,15 @@
+#include <sys/_stdint.h>
 #ifndef CONTROL_H
 #define CONTROL_H
 
-#include "common/tusb_common.h"
-#include <cstdlib>
-#include <cstring>
-#include <sys/_intsup.h>
-#include <sys/_types.h>
-#include "SerialUSB.h"
-#include <iterator>
-#include <sys/_stdint.h>
+// #include "common/tusb_common.h"
+// #include <cstdlib>
+// #include <cstring>
+// #include <sys/_intsup.h>
+// #include <sys/_types.h>
+// #include "SerialUSB.h"
+// #include <iterator>
+// #include <sys/_stdint.h>
 
 #include <Arduino.h>
 #include <Adafruit_AW9523.h>
@@ -19,7 +20,7 @@
 Adafruit_AW9523 ledDriver;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
-enum pattern { NONE, FLICKER, BREATHE, BLINK, PRINT };
+enum pattern { NONE, FLICKER, BREATHE, BLINK, PRINT, SCROLL };
 
 //Control class enables ability to run multiple patterns on leds simultaneously
 //without using sleep statements.
@@ -48,6 +49,8 @@ class Control {
   uint16_t flickerCooldown = 0;
 
   const uint8_t* bitmap;
+  const uint8_t* endBitmap;
+  bool doScroll;
 
   const char* text;
 
@@ -79,6 +82,9 @@ class Control {
           break;
         case PRINT:
           printUpdate();
+          break;
+        case SCROLL:
+          scrollUpdate();
           break;
         default:
           break;
@@ -136,11 +142,13 @@ class Control {
   //used with an 8x8 led matrix to scroll the given (_text) across the matrix. Scroll speed is
   //defined by (updateInterval)
   //(endBitmap) defines the image to be shown once the scrolling is complete
-  void print(const char* _text, uint16_t updateInterval, const uint8_t endBitmap[]) {
+  void print(const char* _text, uint16_t updateInterval, const uint8_t map[], bool _doScroll = false, bool _repeat = false) {
     activePattern = PRINT;
     text = _text;
 
-    bitmap = endBitmap;
+    endBitmap = map;
+    doScroll = _doScroll;
+    repeat = _repeat;
     
     interval = updateInterval;
     totalSteps = (strlen(text) * -6) - 1;
@@ -152,12 +160,23 @@ class Control {
 
   }
 
+  void scroll(uint16_t updateInterval, const uint8_t map[], const uint8_t endMap[], bool _repeat = false) {
+    activePattern = SCROLL;
+
+    bitmap = map;
+    endBitmap = endMap;
+    interval = updateInterval;
+    totalSteps = -8;
+    index = 5;
+    repeat = _repeat;
+  }
+
   private:
 
   //internal use at the end of a single step of a pattern to increment it to the next step 
   //or end the pattern
   void increment() {
-    if((activePattern != PRINT) && (++index >= totalSteps)) {
+    if((activePattern != PRINT && activePattern != SCROLL) && (++index >= totalSteps)) {
       index = 0;
       if(!repeat) {
         if(activePattern == FLICKER) {
@@ -173,12 +192,23 @@ class Control {
       }
     }
     //print needs to decrement to scroll text the correct direction.
-    else if((activePattern == PRINT) && (--index < totalSteps)) {
-      index = 0;
-      activePattern = NONE;
-      matrix.clear();
-      matrix.drawBitmap(0,0, bitmap, 8,8, LED_ON);
-      matrix.writeDisplay();
+    else if(((activePattern == PRINT) || (activePattern == SCROLL)) && (--index < totalSteps)) {
+      if(repeat) {
+        index = 7;
+      }
+      else{
+        if(doScroll) {
+          doScroll = false;
+          this->scroll(71, endBitmap, endBitmap, true); //71ms interval works great for the specific text and timing I'm using
+        }
+        else {
+          index = 0;
+          activePattern = NONE;
+          matrix.clear();
+          matrix.drawBitmap(0,0, endBitmap, 8,8, LED_ON);
+          matrix.writeDisplay();
+        }
+      }
     }
   }
 
@@ -233,6 +263,13 @@ class Control {
       matrix.print(text);
       matrix.writeDisplay();
       increment();
+  }
+
+  void scrollUpdate() {
+    matrix.clear();
+    matrix.drawBitmap(index,0, bitmap, 8,8, LED_ON); //draw bitmap shifted by the index
+    matrix.writeDisplay();                          //write bitmap to display
+    increment();
   }
 
 };
