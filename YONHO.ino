@@ -1,19 +1,5 @@
-// #include <Arduino.h>
-// #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
 #include "control.h"
-
-// #define SIGN_TOP 1
-// #define SIGN_BOTTOM 2
-// #define DOT_RIGHT 6
-// #define DOT_LEFT 7
-// #define ARCH_RIGHT 12
-// #define ARCH_LEFT 13
-// #define CORNER_RIGHT 14
-// #define CORNER_LEFT 15
-
-// #define MIN_BRIGHTNESS 0
-// #define MAX_BRIGHTNESS 255
 
 
 //onboard neopixel used as status indicator
@@ -29,7 +15,7 @@ Control dotRight(DOT_RIGHT);
 Control archLeft(ARCH_LEFT);
 Control archRight(ARCH_RIGHT);
 
-Control mat(-1);// no pin it's over &Wire1
+Control mat(-1); //no pin it's over &Wire1
 
 
 void setup() {
@@ -78,24 +64,25 @@ void setup() {
 
   pixels.fill(0x00FF00); //status LED to green once setup is complete
   pixels.show();
-  randomSeed(analogRead(0)); //seed the random number generator from an unused pin on the QT_PY
+  randomSeed(millis()); //seed the random number generator
 }
 
 
 void loop() {
 
-  //trigger sign to fade out and in
+  //trigger sign to fade out and in every 5 seconds
   if(millis() % 5000 == 0)
     signTop.breathe(1000);
   if(millis() % 5000 == 300) // offset breathe by 0.3s from top of sign
     signBottom.breathe(1000);
   
 
+  //start of 1min loop
   if(millis() % 60000 == 1000) {
     mat.print("New Hashima Service", 50, smile_bmp);
   }
 
-  //trigger scanning patterns
+  //trigger scanning patterns at 20s and 40s
   if(millis() % 60000 == 20000 || millis() % 60000 == 40000) {
     dotLeft.blink(300, 100, 14);
     dotRight.blink(300, 100, 14);
@@ -122,6 +109,5 @@ void loop() {
   archLeft.update();
   archRight.update();
   mat.update();
-  
 }
 

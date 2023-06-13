@@ -1,15 +1,5 @@
-#include <sys/_stdint.h>
 #ifndef CONTROL_H
 #define CONTROL_H
-
-// #include "common/tusb_common.h"
-// #include <cstdlib>
-// #include <cstring>
-// #include <sys/_intsup.h>
-// #include <sys/_types.h>
-// #include "SerialUSB.h"
-// #include <iterator>
-// #include <sys/_stdint.h>
 
 #include <Arduino.h>
 #include <Adafruit_AW9523.h>
@@ -25,6 +15,7 @@ enum pattern { NONE, FLICKER, BREATHE, BLINK, PRINT, SCROLL };
 //Control class enables ability to run multiple patterns on leds simultaneously
 //without using sleep statements.
 class Control {
+  public:
 
   int pin;
   uint8_t brightness = MAX_BRIGHTNESS; // all leds are initially on
@@ -46,7 +37,7 @@ class Control {
   int16_t totalSteps;
   int16_t index;
 
-  uint16_t flickerCooldown = 0;
+  uint16_t flickerCooldown = 0; //ensure flicker goes off when first called
 
   const uint8_t* bitmap;
   const uint8_t* endBitmap;
@@ -56,17 +47,18 @@ class Control {
 
   void (*onComplete)();
 
-  public:
-
-  Control(int pin = 0) : pin(pin) {
+  //constructor
+  Control(int pin = -1) : pin(pin) {
       activePattern = NONE;
   }
 
-  //Call once per main loop to check if the pattern needs to be updated
+  //Call once per main loop per instance to check if the pattern needs to be updated
   void update() {
     curMillis = millis();
+    //check if an update is needed
     if(curMillis - prevMillis > interval) {
       prevMillis = curMillis;
+      //activate the correct pattern's update
       switch(activePattern) {
         case FLICKER:
           if(flickerCooldown > 0)
@@ -101,6 +93,7 @@ class Control {
       return;
     }
     activePattern = FLICKER;
+
     randomSeed(millis()); // new random seed each time
     interval = _interval;
     totalSteps = duration / interval;
@@ -119,7 +112,6 @@ class Control {
     period = _period / 2;
     totalSteps = 2 * period / interval;
     index = 0;
-
     repeat = _repeat;
   }
 
@@ -134,32 +126,36 @@ class Control {
     numBlinks = _numBlinks;
     prevMillis = 0;
     brightness = HIGH;
-
     interval = onTime;
     repeat = _repeat;
   }
 
   //used with an 8x8 led matrix to scroll the given (_text) across the matrix. Scroll speed is
   //defined by (updateInterval)
-  //(endBitmap) defines the image to be shown once the scrolling is complete
+  //(map) defines the image to be shown once the scrolling is complete
+  //(_doScroll) determines if end bitmap should scroll or not. Defaults to false
+  //(_repeat) is used to restart the pattern at the end. Defaults to false
   void print(const char* _text, uint16_t updateInterval, const uint8_t map[], bool _doScroll = false, bool _repeat = false) {
     activePattern = PRINT;
-    text = _text;
 
+    text = _text;
     endBitmap = map;
     doScroll = _doScroll;
     repeat = _repeat;
-    
     interval = updateInterval;
-    totalSteps = (strlen(text) * -6) - 1;
+    totalSteps = (strlen(text) * -6) - 1; // how many shifts are needed to move the entire text across the screen
     index = 7;// start off the screen
 
+    //set matrix settings
     matrix.setTextSize(1);
     matrix.setTextWrap(false);
     matrix.setTextColor(LED_ON);
-
   }
 
+  //used with an 8x8 led matrix to scroll the given bit(map) across the matrix. Scroll speed is
+  //defined by (updateInterval)
+  //(endMap) defines the image to be shown once the scrolling is complete
+  //(_repeat) is used to restart the pattern at the end. Defaults to false
   void scroll(uint16_t updateInterval, const uint8_t map[], const uint8_t endMap[], bool _repeat = false) {
     activePattern = SCROLL;
 
@@ -223,7 +219,6 @@ class Control {
   void breatheUpdate() {
     phase = (index / period) * M_PI;
     brightness = int(pow((cos(phase) + 1.0) * 0.5, GAMMA) * MAX_BRIGHTNESS + 0.5 );
-    // Serial.print("phase:"); Serial.print(phase);Serial.print("index:"); Serial.print(index); Serial.print("brightness:"); Serial.println(brightness);
     ledDriver.analogWrite(pin, brightness);
     increment();
   }
