@@ -102,13 +102,13 @@ void loop() {
   }
 
   //randomly flicker arches and sign
-  if(millis() % random(1000000) == 0) {
-    archLeft.flicker(500, 10, 2000);
+  if(millis() % random(750000) == 0) {
+    archLeft.flicker(500, 10, 1000);
   }
-  if(millis() % random(1000000) == 0) {
-    archRight.flicker(500, 10, 2000);
+  if(millis() % random(750000) == 0) {
+    archRight.flicker(500, 10, 1000);
   }
-  if(millis() % random(1000000/2) == 0) {
+  if(millis() % random(500000) == 0) {
     signTop.flicker(500, 10, 100);
     signBottom.flicker(500, 10, 100);
   }
